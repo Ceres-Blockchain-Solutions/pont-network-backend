@@ -13,7 +13,7 @@ import { UserModule } from './user/user.module';
     ScheduleModule.forRoot(),
     ShipModule,
     AuthModule,
-    UserModule
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
