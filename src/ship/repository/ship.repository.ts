@@ -54,4 +54,8 @@ export class ShipRepository {
       }),
     );
   }
+
+  async findOne(shipID: number): Promise<Ship> {
+    return await this.shipModel.findOne({ shipID }).exec();
+  }
 }
