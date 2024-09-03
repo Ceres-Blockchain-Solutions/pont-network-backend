@@ -23,7 +23,7 @@ export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
     }),
   ],
   providers: [
-    AuthService, 
+    AuthService,
     JwtService,
     // {
     //   provide: APP_GUARD,
