@@ -5,6 +5,9 @@ import { ShipRepository } from './repository/ship.repository';
 import { Ship } from './entities/ship.entity';
 import { Cron } from '@nestjs/schedule';
 
+import { Coordinate } from './entities/ship.entity';
+
+
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -41,16 +44,16 @@ export class ShipService {
     );
 
     const updateShipDto: UpdateShipDto = {
-      gpsLocation: Math.random() * 100,
+      //gps location will change latitude and longitude every minute
+      gpsLocation: {
+        latitude: temp.gpsLocation[temp.gpsLocation.length - 1].latitude + Math.floor(Math.random() * 11) - 5,
+        longitude: temp.gpsLocation[temp.gpsLocation.length - 1].longitude + Math.floor(Math.random() * 11) - 5,
+      },
       //mileage should be greater than last, max by 10km every minute
       mileage:
         temp.mileage[temp.mileage.length - 1] + Math.floor(Math.random() * 10),
-      //TODO
-      //engine load can change max -5% to 5% every minute
-      engineLoad:
-        temp.engineLoad[temp.engineLoad.length - 1] +
-        Math.floor(Math.random() * 11) -
-        5,
+      //engine load can change between 0% and 100% every minute
+      engineLoad: Math.floor(Math.random() * 100),
       //fuel level should be lower max 2% every minute
       fuelLevel:
         temp.fuelLevel[temp.fuelLevel.length - 1] -
@@ -77,7 +80,6 @@ export class ShipService {
         temp.barometricPressure[temp.barometricPressure.length - 1] +
         Math.floor(Math.random() * 11) -
         5,
-      //TODO
       //cargo status changes every minute
       cargoStatus: CargoStatus[enums[Math.floor(Math.random() * enums.length)]],
     };
@@ -106,9 +108,5 @@ export class ShipService {
     // fs.writeFileSync(filePath, JSON.stringify({ ...updateShipDto, shipID, timestamp: new Date() }));
 
     return await this.shipRepository.update(shipID, updateShipDto);
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} ship`;
   }
 }

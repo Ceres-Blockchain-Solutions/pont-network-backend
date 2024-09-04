@@ -1,4 +1,5 @@
 import { IsNotEmpty, IsNumber, IsString, IsEnum } from 'class-validator';
+import { Coordinate} from '../entities/ship.entity';
 
 export enum CargoStatus {
   INTRANSIT = 'INTRANSIT',
@@ -12,8 +13,7 @@ export class CreateShipDto {
   shipID: number;
 
   @IsNotEmpty()
-  @IsNumber()
-  gpsLocation: number;
+  gpsLocation: Coordinate;
 
   @IsNotEmpty()
   @IsNumber()

@@ -2,13 +2,18 @@ import { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { CargoStatus } from '../dto/create-ship.dto';
 
+export type Coordinate = {
+  latitude: number;
+  longitude: number;
+};
+
 @Schema()
 export class Ship extends Document {
   @Prop({ required: true })
   shipID: number;
 
   @Prop({ required: true })
-  gpsLocation: number[];
+  gpsLocation: Coordinate[];
 
   @Prop({ required: true })
   mileage: number[];

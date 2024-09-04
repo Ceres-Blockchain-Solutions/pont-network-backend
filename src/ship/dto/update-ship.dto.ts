@@ -2,11 +2,11 @@ import { PartialType } from '@nestjs/mapped-types';
 import { CargoStatus, CreateShipDto } from './create-ship.dto';
 
 import { IsNotEmpty, IsNumber, IsString, IsEnum } from 'class-validator';
+import { Coordinate } from '../entities/ship.entity';
 
 export class UpdateShipDto extends PartialType(CreateShipDto) {
   @IsNotEmpty()
-  @IsNumber()
-  gpsLocation: number;
+  gpsLocation: Coordinate;
 
   @IsNotEmpty()
   @IsNumber()
