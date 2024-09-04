@@ -17,12 +17,12 @@ import { UpdateShipDto } from './dto/update-ship.dto';
 export class ShipController {
   constructor(private readonly shipService: ShipService) {}
 
-  @Post()
+  @Post('/create-ship')
   create(@Body() createShipDto: CreateShipDto) {
     return this.shipService.create(createShipDto);
   }
 
-  @Get()
+  @Get('/get-all-ships')
   findAll() {
     return this.shipService.findAll();
   }
@@ -38,10 +38,5 @@ export class ShipController {
     @Body() updateShipDto: UpdateShipDto,
   ) {
     return this.shipService.update(shipID, updateShipDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.shipService.remove(+id);
   }
 }

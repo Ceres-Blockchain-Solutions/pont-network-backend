@@ -36,26 +36,47 @@ export class ShipService {
 
     const temp = await this.findOne(1);
 
-    const updateShipDto: UpdateShipDto = {
+    const currentCountryIndex = countries.indexOf(
+      temp.seaState[temp.seaState.length - 1],
+    );
 
+    const updateShipDto: UpdateShipDto = {
       gpsLocation: Math.random() * 100,
       //mileage should be greater than last, max by 10km every minute
-      mileage: temp.mileage[temp.mileage.length - 1] + Math.floor(Math.random() * 10),
-      //engine load can change max -5% to 5% every minute
-      engineLoad: temp.engineLoad[temp.engineLoad.length - 1] + Math.floor(Math.random() * 11) - 5,
-      //fuel level should be lower max 2% every minute
-      fuelLevel: temp.seaSurfaceTemperature[temp.seaSurfaceTemperature.length - 1] - Math.floor(Math.random() * 2),
+      mileage:
+        temp.mileage[temp.mileage.length - 1] + Math.floor(Math.random() * 10),
       //TODO
-      //country is randomly choosen from file every minute
-      seaState: countries[Math.floor(Math.random() * countries.length)],
+      //engine load can change max -5% to 5% every minute
+      engineLoad:
+        temp.engineLoad[temp.engineLoad.length - 1] +
+        Math.floor(Math.random() * 11) -
+        5,
+      //fuel level should be lower max 2% every minute
+      fuelLevel:
+        temp.fuelLevel[temp.fuelLevel.length - 1] -
+        Math.floor(Math.random() * 2),
+      //country is changed every minute to next in array of countries
+      seaState: countries[(currentCountryIndex + 1) % countries.length],
       //sea surface temperature can change max -2 to +2 every minute
-      seaSurfaceTemperature: temp.seaSurfaceTemperature[temp.seaSurfaceTemperature.length - 1] + Math.floor(Math.random() * 5) - 2,
+      seaSurfaceTemperature:
+        temp.seaSurfaceTemperature[temp.seaSurfaceTemperature.length - 1] +
+        Math.floor(Math.random() * 5) -
+        2,
       //air temperature can change max -2 to +2 every minute
-      airTemperature: temp.airTemperature[temp.airTemperature.length - 1] + Math.floor(Math.random() * 5) - 2,
+      airTemperature:
+        temp.airTemperature[temp.airTemperature.length - 1] +
+        Math.floor(Math.random() * 5) -
+        2,
       //humidity can change max -2% to +2% every minute
-      humidity: temp.humidity[temp.humidity.length - 1] + Math.floor(Math.random() * 5) - 2,
+      humidity:
+        temp.humidity[temp.humidity.length - 1] +
+        Math.floor(Math.random() * 5) -
+        2,
       //barometric pressure can change max -5 to 5 every minute
-      barometricPressure: temp.barometricPressure[temp.barometricPressure.length - 1] + Math.floor(Math.random() * 11) - 5,
+      barometricPressure:
+        temp.barometricPressure[temp.barometricPressure.length - 1] +
+        Math.floor(Math.random() * 11) -
+        5,
       //TODO
       //cargo status changes every minute
       cargoStatus: CargoStatus[enums[Math.floor(Math.random() * enums.length)]],
