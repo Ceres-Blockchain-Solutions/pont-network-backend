@@ -15,29 +15,6 @@ export class ShipRepository {
     return (await this.shipModel.create(createShipDto)).save();
   }
 
-  async update(shipID: number, updateShipDto: UpdateShipDto): Promise<Ship> {
-    const updatedShip = await this.shipModel.findOneAndUpdate(
-      { shipID },
-      {
-        $push: {
-          gpsLocation: updateShipDto.gpsLocation,
-          mileage: updateShipDto.mileage,
-          engineLoad: updateShipDto.engineLoad,
-          fuelLevel: updateShipDto.fuelLevel,
-          seaState: updateShipDto.seaState,
-          seaSurfaceTemperature: updateShipDto.seaSurfaceTemperature,
-          airTemperature: updateShipDto.airTemperature,
-          humidity: updateShipDto.humidity,
-          barometricPressure: updateShipDto.barometricPressure,
-          cargoStatus: updateShipDto.cargoStatus,
-          timestamp: Date.now(),
-        },
-      },
-      { new: true },
-    );
-    return updatedShip;
-  }
-
   async findAll(): Promise<Ship[]> {
     const ships = await this.shipModel.find().exec();
     if (!ships) {
@@ -50,6 +27,23 @@ export class ShipRepository {
           delete ret._id;
           // delete ret.$__;
           // delete ret.$isNew;
+        },
+      }),
+    );
+  }
+
+  async findAllByID(shipID: number): Promise<Ship[]> {
+    const ships = await this.shipModel.find({ shipID });
+
+    if (!ships) {
+      throw new NotFoundException(`Ships not found`);
+    }
+
+    return ships.map((ship) =>
+      ship.toObject({
+        transform(doc, ret) {
+          delete ret.__v;
+          delete ret._id;
         },
       }),
     );

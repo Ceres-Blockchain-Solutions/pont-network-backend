@@ -21,15 +21,6 @@ export class ShipService {
   constructor(private readonly shipRepository: ShipRepository) {}
 
   async create(createShipDto: CreateShipDto) {
-    // const backupDir = '/var/shipdata/backup/'; //add path
-
-    // if (!fs.existsSync(backupDir)) {
-    //   fs.mkdirSync(backupDir, { recursive: true });
-    // }
-
-    // const filePath = path.join(backupDir, `backup_${Date.now()}.json`);
-    // fs.writeFileSync(filePath, JSON.stringify({ ...createShipDto, timestamp: new Date() }));
-
     return (await this.shipRepository.create(createShipDto)).toObject();
   }
 
@@ -37,76 +28,32 @@ export class ShipService {
   async fetchSensorData() {
     const enums = Object.keys(CargoStatus);
 
-    const temp = await this.findOne(1);
-
-    const currentCountryIndex = countries.indexOf(
-      temp.seaState[temp.seaState.length - 1],
-    );
-
-    const updateShipDto: UpdateShipDto = {
-      //gps location will change latitude and longitude every minute
+    const createShipDto: CreateShipDto = {
+      shipID: 1,
       gpsLocation: {
-        latitude: temp.gpsLocation[temp.gpsLocation.length - 1].latitude + Math.floor(Math.random() * 11) - 5,
-        longitude: temp.gpsLocation[temp.gpsLocation.length - 1].longitude + Math.floor(Math.random() * 11) - 5,
+        latitude: 1,
+        longitude: 2,
       },
-      //mileage should be greater than last, max by 10km every minute
-      mileage:
-        temp.mileage[temp.mileage.length - 1] + Math.floor(Math.random() * 10),
-      //engine load can change between 0% and 100% every minute
-      engineLoad: Math.floor(Math.random() * 100),
-      //fuel level should be lower max 2% every minute
-      fuelLevel:
-        temp.fuelLevel[temp.fuelLevel.length - 1] -
-        Math.floor(Math.random() * 2),
-      //country is changed every minute to next in array of countries
-      seaState: countries[(currentCountryIndex + 1) % countries.length],
-      //sea surface temperature can change max -2 to +2 every minute
-      seaSurfaceTemperature:
-        temp.seaSurfaceTemperature[temp.seaSurfaceTemperature.length - 1] +
-        Math.floor(Math.random() * 5) -
-        2,
-      //air temperature can change max -2 to +2 every minute
-      airTemperature:
-        temp.airTemperature[temp.airTemperature.length - 1] +
-        Math.floor(Math.random() * 5) -
-        2,
-      //humidity can change max -2% to +2% every minute
-      humidity:
-        temp.humidity[temp.humidity.length - 1] +
-        Math.floor(Math.random() * 5) -
-        2,
-      //barometric pressure can change max -5 to 5 every minute
-      barometricPressure:
-        temp.barometricPressure[temp.barometricPressure.length - 1] +
-        Math.floor(Math.random() * 11) -
-        5,
-      //cargo status changes every minute
-      cargoStatus: CargoStatus[enums[Math.floor(Math.random() * enums.length)]],
+      mileage: 4,
+      engineLoad: 100,
+      fuelLevel: 2,
+      seaState: 'mokro',
+      seaSurfaceTemperature: 20,
+      airTemperature: 20,
+      humidity: 3,
+      barometricPressure: 2,
+      cargoStatus: CargoStatus[enums[0]],
     };
 
-    console.log(updateShipDto);
-
-    await this.shipRepository.update(1, updateShipDto);
+    return (await this.shipRepository.create(createShipDto)).toObject();
   }
 
-  async findOne(shipID: number): Promise<Ship> {
-    return await this.shipRepository.findOne(shipID);
+  async findAllByID(shipID: number): Promise<Ship[]> {
+    return await this.shipRepository.findAllByID(shipID);
   }
 
   async findAll(): Promise<Ship[]> {
     return await this.shipRepository.findAll();
   }
 
-  async update(shipID: number, updateShipDto: UpdateShipDto) {
-    // const backupDir = '/shipdata/backup/'; //add path
-
-    // if (!fs.existsSync(backupDir)) {
-    //   fs.mkdirSync(backupDir, { recursive: true });
-    // }
-
-    // const filePath = path.join(backupDir, `backup_${Date.now()}.json`);
-    // fs.writeFileSync(filePath, JSON.stringify({ ...updateShipDto, shipID, timestamp: new Date() }));
-
-    return await this.shipRepository.update(shipID, updateShipDto);
-  }
 }

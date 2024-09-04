@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsNumber, IsString, IsEnum } from 'class-validator';
-import { Coordinate} from '../entities/ship.entity';
+import { Coordinate } from '../entities/ship.entity';
 
 export enum CargoStatus {
   INTRANSIT = 'INTRANSIT',
@@ -48,6 +48,6 @@ export class CreateShipDto {
   barometricPressure: number;
 
   @IsNotEmpty()
-  @IsEnum(CargoStatus)
+  // @IsEnum(CargoStatus)
   cargoStatus: CargoStatus;
 }

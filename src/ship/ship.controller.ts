@@ -28,15 +28,7 @@ export class ShipController {
   }
 
   @Get(':shipID')
-  findOne(@Param('shipID') shipID: number) {
-    return this.shipService.findOne(shipID);
-  }
-
-  @Patch(':shipID')
-  update(
-    @Param('shipID') shipID: number,
-    @Body() updateShipDto: UpdateShipDto,
-  ) {
-    return this.shipService.update(shipID, updateShipDto);
+  findAllByID(@Param('shipID') shipID: number) {
+    return this.shipService.findAllByID(shipID);
   }
 }
