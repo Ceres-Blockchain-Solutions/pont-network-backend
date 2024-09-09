@@ -9,8 +9,8 @@ export enum CargoStatus {
 
 export class CreateShipDto {
   @IsNotEmpty()
-  @IsNumber()
-  shipID: number;
+  @IsString()
+  shipID: string;
 
   @IsNotEmpty()
   gpsLocation: Coordinate;
@@ -48,6 +48,6 @@ export class CreateShipDto {
   barometricPressure: number;
 
   @IsNotEmpty()
-  // @IsEnum(CargoStatus)
+  @IsEnum(CargoStatus)
   cargoStatus: CargoStatus;
 }

@@ -37,9 +37,7 @@ The backend will be available at http://localhost:3000.
 - ```npm run start:debug```: Starts the application in debug mode.
 - ```npm run lint```: Runs the linter to check for code quality issues.
 - ```npm run format```: Formats the codebase using Prettier.
-- ```npm run test```: Runs all unit tests.
-- ```npm run test:e2e```: Runs end-to-end tests.
-- ```npm run test:cov```: Runs tests and displays the test coverage.
+
 
 ## API Documentation
 The API documentation is available through Swagger. Once the application is running, navigate to:

@@ -1,16 +1,7 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ShipService } from './ship.service';
 import { CreateShipDto } from './dto/create-ship.dto';
-import { UpdateShipDto } from './dto/update-ship.dto';
 
 @ApiTags('Ship')
 @Controller('ship')
@@ -28,7 +19,7 @@ export class ShipController {
   }
 
   @Get(':shipID')
-  findAllByID(@Param('shipID') shipID: number) {
+  findAllByID(@Param('shipID') shipID: string) {
     return this.shipService.findAllByID(shipID);
   }
 }

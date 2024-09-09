@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Ship } from '../entities/ship.entity';
 import { CreateShipDto } from '../dto/create-ship.dto';
-import { UpdateShipDto } from '../dto/update-ship.dto';
 
 @Injectable()
 export class ShipRepository {
@@ -32,7 +31,7 @@ export class ShipRepository {
     );
   }
 
-  async findAllByID(shipID: number): Promise<Ship[]> {
+  async findAllByID(shipID: string): Promise<Ship[]> {
     const ships = await this.shipModel.find({ shipID });
 
     if (!ships) {

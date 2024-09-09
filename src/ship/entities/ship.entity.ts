@@ -11,8 +11,8 @@ export class Coordinate {
 
 @Schema()
 export class Ship extends Document {
-  @Prop({ required: true })
-  shipID: number;
+  @Prop({ required: true, minlength: 32, maxlength: 44 })
+  shipID: string;
 
   @Prop({ required: true })
   gpsLocation: Coordinate;

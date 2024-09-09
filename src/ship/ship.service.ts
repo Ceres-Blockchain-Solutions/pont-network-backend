@@ -4,14 +4,6 @@ import { ShipRepository } from './repository/ship.repository';
 import { Ship } from './entities/ship.entity';
 import { Cron } from '@nestjs/schedule';
 
-import * as fs from 'fs';
-import * as path from 'path';
-
-const filePath = path.resolve(__dirname, 'utils/country-names.json');
-const countries = JSON.parse(
-  fs.readFileSync(filePath.replace('dist', 'src'), 'utf-8'),
-);
-
 @Injectable()
 export class ShipService {
   constructor(private readonly shipRepository: ShipRepository) {}
@@ -28,12 +20,20 @@ export class ShipService {
   async fetchSensorData() {
     const enums = Object.keys(CargoStatus);
 
-    const temp = await this.shipRepository.findAllByID(1);
+    const temp = await this.shipRepository.findAllByID(
+      '2kBcbo8q4m2BQHBM6YXdqzKvs3jngDKeuasLUbjpzLbw',
+    );
     const lastShipData = temp[temp.length - 1];
     // Generate random values for each field except mileage and fuel level
     const gpsLocation = {
-      latitude: this.randomFloatInRange(lastShipData.gpsLocation.latitude - 5, lastShipData.gpsLocation.latitude + 5), // Latitude range -90 to 90
-      longitude: this.randomFloatInRange(lastShipData.gpsLocation.longitude - 5, lastShipData.gpsLocation.longitude + 5), // Longitude range -180 to 180
+      latitude: this.randomFloatInRange(
+        lastShipData.gpsLocation.latitude - 5,
+        lastShipData.gpsLocation.latitude + 5,
+      ), // Latitude range -90 to 90
+      longitude: this.randomFloatInRange(
+        lastShipData.gpsLocation.longitude - 5,
+        lastShipData.gpsLocation.longitude + 5,
+      ), // Longitude range -180 to 180
     };
 
     // Increment mileage and decrement fuel level
@@ -42,16 +42,28 @@ export class ShipService {
     if (this.fuelLevel < 0) this.fuelLevel = 0; // Ensure fuel level doesn't go negative
 
     const createShipDto: CreateShipDto = {
-      shipID: 1,
+      shipID: '2kBcbo8q4m2BQHBM6YXdqzKvs3jngDKeuasLUbjpzLbw',
       gpsLocation: gpsLocation,
       mileage: this.mileage,
       engineLoad: this.randomFloatInRange(10, 100),
       fuelLevel: this.fuelLevel,
       seaState: this.randomSeaState(),
-      seaSurfaceTemperature: this.randomFloatInRange(lastShipData.seaSurfaceTemperature - 2, lastShipData.seaSurfaceTemperature + 2),
-      airTemperature: this.randomFloatInRange(lastShipData.airTemperature - 2, lastShipData.airTemperature + 2),
-      humidity: this.randomFloatInRange(lastShipData.humidity - 2, lastShipData.humidity + 2),
-      barometricPressure: this.randomFloatInRange(lastShipData.barometricPressure - 2, lastShipData.barometricPressure + 2),
+      seaSurfaceTemperature: this.randomFloatInRange(
+        lastShipData.seaSurfaceTemperature - 2,
+        lastShipData.seaSurfaceTemperature + 2,
+      ),
+      airTemperature: this.randomFloatInRange(
+        lastShipData.airTemperature - 2,
+        lastShipData.airTemperature + 2,
+      ),
+      humidity: this.randomFloatInRange(
+        lastShipData.humidity - 2,
+        lastShipData.humidity + 2,
+      ),
+      barometricPressure: this.randomFloatInRange(
+        lastShipData.barometricPressure - 2,
+        lastShipData.barometricPressure + 2,
+      ),
       cargoStatus: CargoStatus[enums[Math.floor(Math.random() * enums.length)]],
     };
 
@@ -80,7 +92,7 @@ export class ShipService {
     return states[Math.floor(Math.random() * states.length)];
   }
 
-  async findAllByID(shipID: number): Promise<Ship[]> {
+  async findAllByID(shipID: string): Promise<Ship[]> {
     return await this.shipRepository.findAllByID(shipID);
   }
 
