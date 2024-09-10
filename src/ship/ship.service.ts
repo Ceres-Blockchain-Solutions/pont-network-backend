@@ -73,13 +73,14 @@ export class ShipService {
 
     // add condition
     if (this.shipQueue.length < 5) {
-      this.shipQueue.push(createShipDto);
+      this.shipQueue.push({ ...createShipDto, timestamp: new Date() });
     } else {
       await Promise.all(
-        this.shipQueue.map(async (element: CreateShipDto) => {
-          this.sendToProgram(element);
-
-          return (await this.shipRepository.create(element)).toObject();
+        this.shipQueue.map(async ({ timestamp, ...createShipDto }) => {
+          // Send element to program on Solana
+          await this.sendToProgram(createShipDto);
+      
+          return (await this.shipRepository.create(createShipDto)).toObject();
         })
       );
 
