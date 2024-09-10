@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { CargoStatus, CreateShipDto } from './dto/create-ship.dto';
 import { ShipRepository } from './repository/ship.repository';
 import { Ship } from './entities/ship.entity';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import * as Bull from 'bull';
+
 
 @Injectable()
 export class ShipService {
@@ -10,13 +12,15 @@ export class ShipService {
 
   private mileage = 0; // Initialize mileage
   private fuelLevel = 100; // Initialize fuel level to 100 (full)
+  private shipQueue = [];
 
   async create(createShipDto: CreateShipDto) {
     this.mileage = createShipDto.mileage;
     return (await this.shipRepository.create(createShipDto)).toObject();
   }
 
-  @Cron('* * * * *')
+  // @Cron(CronExpression.EVERY_10_MINUTES)
+  @Cron(CronExpression.EVERY_5_SECONDS)
   async fetchSensorData() {
     const enums = Object.keys(CargoStatus);
 
@@ -67,9 +71,20 @@ export class ShipService {
       cargoStatus: CargoStatus[enums[Math.floor(Math.random() * enums.length)]],
     };
 
-    console.log(createShipDto);
+    // add condition
+    if (this.shipQueue.length < 5) {
+      this.shipQueue.push(createShipDto);
+    } else {
+      await Promise.all(
+        this.shipQueue.map(async (element: CreateShipDto) => {
+          this.sendToProgram(element);
 
-    return (await this.shipRepository.create(createShipDto)).toObject();
+          return (await this.shipRepository.create(element)).toObject();
+        })
+      );
+
+      this.shipQueue = [];
+    }
   }
 
   // Helper function to generate a random float within a range
@@ -90,6 +105,11 @@ export class ShipService {
       'phenomenal',
     ];
     return states[Math.floor(Math.random() * states.length)];
+  }
+
+  async sendToProgram(createShipDto: CreateShipDto): Promise<string> {
+
+    return "bre"
   }
 
   async findAllByID(shipID: string): Promise<Ship[]> {
