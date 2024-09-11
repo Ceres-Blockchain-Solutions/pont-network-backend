@@ -3,16 +3,26 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Ship } from '../entities/ship.entity';
 import { CreateShipDto } from '../dto/create-ship.dto';
+import { ShipDataEncrypted } from '../entities/shipData.entity';
+import { ShipDataEncryptedDto } from '../dto/create-ship-encypted.dto';
 
 @Injectable()
 export class ShipRepository {
   constructor(
     @InjectModel(Ship.name) private readonly shipModel: Model<Ship>,
+    // @InjectModel(ShipDataEncrypted.name)
+    // private readonly shipDataEncryptedModel: Model<ShipDataEncrypted>,
   ) {}
 
   async create(createShipDto: CreateShipDto) {
     return (await this.shipModel.create(createShipDto)).save();
   }
+
+  // async create(shipDataEncryptedDto: ShipDataEncryptedDto) {
+  //   return (
+  //     await this.shipDataEncryptedModel.create(shipDataEncryptedDto)
+  //   ).save();
+  // }
 
   async findAll(): Promise<Ship[]> {
     const ships = await this.shipModel.find().exec();

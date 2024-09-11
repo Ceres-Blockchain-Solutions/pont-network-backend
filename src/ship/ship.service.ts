@@ -3,8 +3,10 @@ import { CargoStatus, CreateShipDto } from './dto/create-ship.dto';
 import { ShipRepository } from './repository/ship.repository';
 import { Ship } from './entities/ship.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import * as Bull from 'bull';
 
+import crypto from 'crypto';
+import * as cbor from 'cbor';
+import { ShipDataEncryptedDto } from './dto/create-ship-encypted.dto';
 
 @Injectable()
 export class ShipService {
@@ -19,8 +21,12 @@ export class ShipService {
     return (await this.shipRepository.create(createShipDto)).toObject();
   }
 
-  // @Cron(CronExpression.EVERY_10_MINUTES)
+  // async create(shipDataEncryptedDto: ShipDataEncryptedDto) {
+  //   return (await this.shipRepository.create(shipDataEncryptedDto)).toObject();
+  // }
+
   @Cron(CronExpression.EVERY_5_SECONDS)
+  // @Cron(CronExpression.EVERY_10_MINUTES)
   async fetchSensorData() {
     const enums = Object.keys(CargoStatus);
 
@@ -77,15 +83,39 @@ export class ShipService {
     } else {
       await Promise.all(
         this.shipQueue.map(async ({ timestamp, ...createShipDto }) => {
-          // Send element to program on Solana
-          await this.sendToProgram(createShipDto);
-      
-          return (await this.shipRepository.create(createShipDto)).toObject();
-        })
+          // send data to chain
+          const ciphertext = await this.sendToProgram(createShipDto);
+
+          console.log(ciphertext);
+
+          // return (
+          //   await this.shipRepository.create({
+          //     dataCommitmentCipher: ciphertext,
+          //   })
+          // ).toObject();
+
+          return (
+            await this.shipRepository.create(createShipDto)).toObject();
+        }),
       );
 
       this.shipQueue = [];
     }
+  }
+
+  private encrypt(plaintext, key, iv) {
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+
+    let ciphertext = cipher.update(plaintext, 'utf8', 'hex');
+    ciphertext += cipher.final('hex');
+
+    const tag = cipher.getAuthTag().toString('hex');
+
+    return {
+      ciphertext,
+      tag,
+      iv,
+    };
   }
 
   // Helper function to generate a random float within a range
@@ -109,8 +139,19 @@ export class ShipService {
   }
 
   async sendToProgram(createShipDto: CreateShipDto): Promise<string> {
+    const serialized = cbor.encode(createShipDto);
+    const data = Buffer.from(serialized);
+    const iv = new Uint32Array(3);
+    crypto.getRandomValues(iv);
 
-    return "bre"
+    const masterKey = new Uint32Array(8);
+    crypto.getRandomValues(masterKey);
+
+    const encryptedData = this.encrypt(data, masterKey, iv);
+
+    // add sending data to chain
+
+    return encryptedData.ciphertext;
   }
 
   async findAllByID(shipID: string): Promise<Ship[]> {
