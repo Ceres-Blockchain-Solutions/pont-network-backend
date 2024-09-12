@@ -4,9 +4,12 @@ import { ShipRepository } from './repository/ship.repository';
 import { Ship } from './entities/ship.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
-import crypto from 'crypto';
+import * as crypto from 'crypto'
 import * as cbor from 'cbor';
 import { ShipDataEncryptedDto } from './dto/create-ship-encypted.dto';
+import { AnchorProvider } from '@coral-xyz/anchor';
+import { ShipDataEncrypted } from './entities/shipData.entity';
+import { currentShip } from './constants/currentShip';
 
 @Injectable()
 export class ShipService {
@@ -15,34 +18,30 @@ export class ShipService {
   private mileage = 0; // Initialize mileage
   private fuelLevel = 100; // Initialize fuel level to 100 (full)
   private shipQueue = [];
+  private currentObject: CreateShipDto = currentShip;
 
-  async create(createShipDto: CreateShipDto) {
-    this.mileage = createShipDto.mileage;
-    return (await this.shipRepository.create(createShipDto)).toObject();
-  }
-
-  // async create(shipDataEncryptedDto: ShipDataEncryptedDto) {
-  //   return (await this.shipRepository.create(shipDataEncryptedDto)).toObject();
+  // async create(createShipDto: CreateShipDto) {
+  //   this.mileage = createShipDto.mileage;
+  //   return (await this.shipRepository.create(createShipDto)).toObject();
   // }
+
+  async create(shipDataEncryptedDto: ShipDataEncryptedDto) {
+    return (await this.shipRepository.create(shipDataEncryptedDto)).toObject();
+  }
 
   @Cron(CronExpression.EVERY_5_SECONDS)
   // @Cron(CronExpression.EVERY_10_MINUTES)
   async fetchSensorData() {
     const enums = Object.keys(CargoStatus);
-
-    const temp = await this.shipRepository.findAllByID(
-      '2kBcbo8q4m2BQHBM6YXdqzKvs3jngDKeuasLUbjpzLbw',
-    );
-    const lastShipData = temp[temp.length - 1];
     // Generate random values for each field except mileage and fuel level
     const gpsLocation = {
       latitude: this.randomFloatInRange(
-        lastShipData.gpsLocation.latitude - 5,
-        lastShipData.gpsLocation.latitude + 5,
+        this.currentObject.gpsLocation.latitude - 5,
+        this.currentObject.gpsLocation.latitude + 5,
       ), // Latitude range -90 to 90
       longitude: this.randomFloatInRange(
-        lastShipData.gpsLocation.longitude - 5,
-        lastShipData.gpsLocation.longitude + 5,
+        this.currentObject.gpsLocation.longitude - 5,
+        this.currentObject.gpsLocation.longitude + 5,
       ), // Longitude range -180 to 180
     };
 
@@ -59,23 +58,25 @@ export class ShipService {
       fuelLevel: this.fuelLevel,
       seaState: this.randomSeaState(),
       seaSurfaceTemperature: this.randomFloatInRange(
-        lastShipData.seaSurfaceTemperature - 2,
-        lastShipData.seaSurfaceTemperature + 2,
+        this.currentObject.seaSurfaceTemperature - 2,
+        this.currentObject.seaSurfaceTemperature + 2,
       ),
       airTemperature: this.randomFloatInRange(
-        lastShipData.airTemperature - 2,
-        lastShipData.airTemperature + 2,
+        this.currentObject.airTemperature - 2,
+        this.currentObject.airTemperature + 2,
       ),
       humidity: this.randomFloatInRange(
-        lastShipData.humidity - 2,
-        lastShipData.humidity + 2,
+        this.currentObject.humidity - 2,
+        this.currentObject.humidity + 2,
       ),
       barometricPressure: this.randomFloatInRange(
-        lastShipData.barometricPressure - 2,
-        lastShipData.barometricPressure + 2,
+        this.currentObject.barometricPressure - 2,
+        this.currentObject.barometricPressure + 2,
       ),
       cargoStatus: CargoStatus[enums[Math.floor(Math.random() * enums.length)]],
     };
+
+    this.currentObject = createShipDto;
 
     // add condition
     if (this.shipQueue.length < 5) {
@@ -88,14 +89,15 @@ export class ShipService {
 
           console.log(ciphertext);
 
-          // return (
-          //   await this.shipRepository.create({
-          //     dataCommitmentCipher: ciphertext,
-          //   })
-          // ).toObject();
+          const temp: ShipDataEncryptedDto = {
+            dataCommitmentCipher: ciphertext
+          }
 
           return (
-            await this.shipRepository.create(createShipDto)).toObject();
+            await this.shipRepository.create(temp)
+          ).toObject();
+
+          // return (await this.shipRepository.create(createShipDto)).toObject();
         }),
       );
 
@@ -141,24 +143,43 @@ export class ShipService {
   async sendToProgram(createShipDto: CreateShipDto): Promise<string> {
     const serialized = cbor.encode(createShipDto);
     const data = Buffer.from(serialized);
+    
     const iv = new Uint32Array(3);
-    crypto.getRandomValues(iv);
-
+    crypto.getRandomValues(iv)
     const masterKey = new Uint32Array(8);
     crypto.getRandomValues(masterKey);
-
+    
     const encryptedData = this.encrypt(data, masterKey, iv);
 
-    // add sending data to chain
+    // // const program = new AnchorProvider();
+
+    // // // add sending data to chain
+    // // const tx = await program.methods
+		// // 	.addDataFingerprint(encryptedData.ciphertext, encryptedData.tag, encryptedData.iv, new anchor.BN(dataTimestamp))
+		// // 	.accountsStrict({
+		// // 		dataAccount,
+		// // 		ship: ship.publicKey,
+		// // 	})
+		// // 	.signers([ship])
+		// // 	.rpc();
 
     return encryptedData.ciphertext;
+    
   }
 
-  async findAllByID(shipID: string): Promise<Ship[]> {
-    return await this.shipRepository.findAllByID(shipID);
+  // async findAllByID(shipID: string): Promise<Ship[]> {
+  //   return await this.shipRepository.findAllByID(shipID);
+  // }
+  
+  async findAllByID(dataCommitmentCipher: string): Promise<ShipDataEncrypted[]> {
+    return await this.shipRepository.findAllByID(dataCommitmentCipher);
   }
 
-  async findAll(): Promise<Ship[]> {
+  // async findAll(): Promise<Ship[]> {
+  //   return await this.shipRepository.findAll();
+  // }
+
+  async findAll(): Promise<ShipDataEncrypted[]> {
     return await this.shipRepository.findAll();
   }
 }

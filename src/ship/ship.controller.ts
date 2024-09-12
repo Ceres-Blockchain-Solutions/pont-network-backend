@@ -9,15 +9,15 @@ import { ShipDataEncryptedDto } from './dto/create-ship-encypted.dto';
 export class ShipController {
   constructor(private readonly shipService: ShipService) {}
 
-  @Post('/create-ship')
-  create(@Body() createShipDto: CreateShipDto) {
-    return this.shipService.create(createShipDto);
-  }
-
   // @Post('/create-ship')
-  // create(@Body() shipDataEncryptedDto: ShipDataEncryptedDto) {
-  //   return this.shipService.create(shipDataEncryptedDto);
+  // create(@Body() createShipDto: CreateShipDto) {
+  //   return this.shipService.create(createShipDto);
   // }
+
+  @Post('/create-ship')
+  create(@Body() shipDataEncryptedDto: ShipDataEncryptedDto) {
+    return this.shipService.create(shipDataEncryptedDto);
+  }
 
   @Get('/get-all-ships')
   findAll() {
@@ -28,4 +28,9 @@ export class ShipController {
   findAllByID(@Param('shipID') shipID: string) {
     return this.shipService.findAllByID(shipID);
   }
+
+  // @Get(':shipID')
+  // findAllByID(@Param('shipID') shipID: string) {
+  //   return this.shipService.findAllByID(shipID);
+  // }
 }
