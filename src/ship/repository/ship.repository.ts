@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Ship } from '../entities/ship.entity';
-import { CreateShipDto } from '../dto/create-ship.dto';
 import { ShipDataEncrypted } from '../entities/shipData.entity';
 import { ShipDataEncryptedDto } from '../dto/create-ship-encypted.dto';
+// import { Ship } from '../entities/ship.entity';
+// import { CreateShipDto } from '../dto/create-ship.dto';
 
 @Injectable()
 export class ShipRepository {
@@ -76,8 +76,12 @@ export class ShipRepository {
   //   );
   // }
 
-  async findAllByID(dataCommitmentCipher: string): Promise<ShipDataEncrypted[]> {
-    const ships = await this.shipDataEncryptedModel.find({ dataCommitmentCipher });
+  async findAllByID(
+    dataCommitmentCipher: string,
+  ): Promise<ShipDataEncrypted[]> {
+    const ships = await this.shipDataEncryptedModel.find({
+      dataCommitmentCipher,
+    });
 
     if (!ships) {
       throw new NotFoundException(`Ships not found`);
@@ -92,8 +96,6 @@ export class ShipRepository {
       }),
     );
   }
-
-  
 
   // async findOne(shipID: number): Promise<Ship> {
   //   return await this.shipModel.findOne({ shipID }).exec();

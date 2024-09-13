@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { CargoStatus, CreateShipDto } from './dto/create-ship.dto';
 import { ShipRepository } from './repository/ship.repository';
-import { Ship } from './entities/ship.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
-import * as crypto from 'crypto'
+import * as crypto from 'crypto';
 import * as cbor from 'cbor';
 import { ShipDataEncryptedDto } from './dto/create-ship-encypted.dto';
-import { AnchorProvider } from '@coral-xyz/anchor';
 import { ShipDataEncrypted } from './entities/shipData.entity';
+// import { Ship } from './entities/ship.entity';
+// import * as anchor from '@coral-xyz/anchor';
+// import { Connection, PublicKey, Keypair } from '@solana/web3.js';
+// import { Program } from '@coral-xyz/anchor';
 import { currentShip } from './constants/currentShip';
 
 @Injectable()
@@ -90,12 +92,11 @@ export class ShipService {
           console.log(ciphertext);
 
           const temp: ShipDataEncryptedDto = {
-            dataCommitmentCipher: ciphertext
-          }
+            dataCommitmentCipher: ciphertext,
+            timestamp,
+          };
 
-          return (
-            await this.shipRepository.create(temp)
-          ).toObject();
+          return (await this.shipRepository.create(temp)).toObject();
 
           // return (await this.shipRepository.create(createShipDto)).toObject();
         }),
@@ -143,35 +144,58 @@ export class ShipService {
   async sendToProgram(createShipDto: CreateShipDto): Promise<string> {
     const serialized = cbor.encode(createShipDto);
     const data = Buffer.from(serialized);
-    
+
     const iv = new Uint32Array(3);
-    crypto.getRandomValues(iv)
+    crypto.getRandomValues(iv);
     const masterKey = new Uint32Array(8);
     crypto.getRandomValues(masterKey);
-    
+
     const encryptedData = this.encrypt(data, masterKey, iv);
 
-    // // const program = new AnchorProvider();
+    // const ciphertext = encryptedData.ciphertext;
+    // const tag = encryptedData.tag;
 
-    // // // add sending data to chain
-    // // const tx = await program.methods
-		// // 	.addDataFingerprint(encryptedData.ciphertext, encryptedData.tag, encryptedData.iv, new anchor.BN(dataTimestamp))
-		// // 	.accountsStrict({
-		// // 		dataAccount,
-		// // 		ship: ship.publicKey,
-		// // 	})
-		// // 	.signers([ship])
-		// // 	.rpc();
+    // const serializedEncryptedData = this.serializeEncryptedData(encryptedData);
+    // const ciphertextBuffer = serializedEncryptedData.ciphertext;
+    // const tagBuffer = serializedEncryptedData.tag;
+    // const ivBuffer = serializedEncryptedData.iv;
+    // const dataTimestamp = Date.now();
+
+    // const ship = anchor.web3.Keypair.generate();
+
+    // const program = anchor.workspace.PontNetwork as Program<PontNetwork>;
+
+    // const [shipAccountAddress, bump1] = PublicKey.findProgramAddressSync(
+    // 	[Buffer.from("ship_account"), ship.publicKey.toBuffer()],
+    // 	program.programId
+    // );
+
+    // const shipAccount = await program.account.shipAccount.fetch(shipAccountAddress);
+
+    // const [dataAccount, bump2] = PublicKey.findProgramAddressSync(
+    // 	[Buffer.from("data_account"), ship.publicKey.toBuffer(), new anchor.BN(shipAccount.dataAccounts.length, "le").toArrayLike(Buffer, "le", 8)],
+    // 	program.programId
+    // );
+
+    // const tx = await program.methods
+    // 	.addDataFingerprint(ciphertextBuffer, tagBuffer, ivBuffer, new anchor.BN(dataTimestamp))
+    // 	.accountsStrict({
+    // 		dataAccount,
+    // 		ship: ship.publicKey,
+    // 	})
+    // 	.signers([ship])
+    // 	.rpc();
 
     return encryptedData.ciphertext;
-    
   }
 
   // async findAllByID(shipID: string): Promise<Ship[]> {
   //   return await this.shipRepository.findAllByID(shipID);
   // }
-  
-  async findAllByID(dataCommitmentCipher: string): Promise<ShipDataEncrypted[]> {
+
+  async findAllByID(
+    dataCommitmentCipher: string,
+  ): Promise<ShipDataEncrypted[]> {
     return await this.shipRepository.findAllByID(dataCommitmentCipher);
   }
 
@@ -181,5 +205,33 @@ export class ShipService {
 
   async findAll(): Promise<ShipDataEncrypted[]> {
     return await this.shipRepository.findAll();
+  }
+
+  serializeEncryptedData(encryptedData: {
+    ciphertext: string;
+    tag: string;
+    iv: Uint32Array;
+  }): {
+    ciphertext: Buffer;
+    tag: Buffer;
+    iv: Buffer;
+  } {
+    const ciphertextBytes = Buffer.from(encryptedData.ciphertext, 'hex');
+    const tagBytes = Buffer.from(encryptedData.tag, 'hex');
+    const ivBytes = encryptedData.iv.buffer;
+
+    // const totalLength = ciphertextBytes.length + tagBytes.length + ivBytes.length;
+    // const serializedData = new Uint8Array(totalLength);
+
+    // serializedData.set(ciphertextBytes, 0);
+    // serializedData.set(tagBytes, ciphertextBytes.length);
+    // serializedData.set(ivBytes, ciphertextBytes.length + tagBytes.length);
+
+    // return serializedData;
+    return {
+      ciphertext: ciphertextBytes,
+      tag: tagBytes,
+      iv: Buffer.from(ivBytes),
+    };
   }
 }
