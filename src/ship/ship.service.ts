@@ -163,7 +163,7 @@ export class ShipService {
 
     // const ship = anchor.web3.Keypair.generate();
 
-    // const program = anchor.workspace.PontNetwork as Program<PontNetwork>;
+    // const program = require('./constants/idl/pont_network.json');
 
     // const [shipAccountAddress, bump1] = PublicKey.findProgramAddressSync(
     // 	[Buffer.from("ship_account"), ship.publicKey.toBuffer()],
