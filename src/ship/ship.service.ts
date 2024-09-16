@@ -11,7 +11,7 @@ import { ShipDataEncrypted } from './entities/shipData.entity';
 // import * as anchor from '@coral-xyz/anchor';
 // import { Connection, PublicKey, Keypair } from '@solana/web3.js';
 // import { Program } from '@coral-xyz/anchor';
-import { currentShip } from './constants/currentShip';
+import { currentShip } from './utils/constants/currentShip';
 
 @Injectable()
 export class ShipService {
@@ -20,6 +20,7 @@ export class ShipService {
   private mileage = 0; // Initialize mileage
   private fuelLevel = 100; // Initialize fuel level to 100 (full)
   private shipQueue = [];
+  private shipEncryptedDataQueue = [];
   private currentObject: CreateShipDto = currentShip;
 
   // async create(createShipDto: CreateShipDto) {
@@ -31,9 +32,88 @@ export class ShipService {
     return (await this.shipRepository.create(shipDataEncryptedDto)).toObject();
   }
 
-  @Cron(CronExpression.EVERY_5_SECONDS)
   // @Cron(CronExpression.EVERY_10_MINUTES)
+  @Cron(CronExpression.EVERY_5_SECONDS)
   async fetchSensorData() {
+    const newShipDataReadings = await this.createShipObject();
+
+    if (this.shipQueue.length < 120) {
+      this.shipQueue.push({ ...newShipDataReadings, timestamp: new Date() });
+    } else {
+      let encryptedShipString = '';
+
+      await Promise.all(
+        this.shipQueue.map(async ({ timestamp, ...createShipDto }) => {
+          const ciphertext = await this.encryptShip(createShipDto);
+
+          encryptedShipString += ciphertext;
+
+          console.log(ciphertext);
+
+          const temp: ShipDataEncryptedDto = {
+            dataCommitmentCipher: ciphertext,
+            timestamp,
+          };
+
+          return (await this.shipRepository.create(temp)).toObject();
+
+          // return (await this.shipRepository.create(createShipDto)).toObject();
+        }),
+      );
+
+      // add check for internet connection
+      if (true) {
+        await Promise.all(
+          this.shipEncryptedDataQueue.map(async (temp) => {
+            await this.sendToProgram(temp);
+          }),
+        );
+
+        this.shipEncryptedDataQueue = [];
+      } else {
+        this.shipEncryptedDataQueue.push(encryptedShipString);
+      }
+
+      this.shipQueue = [];
+    }
+  }
+
+  private encrypt(plaintext, key, iv) {
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+
+    let ciphertext = cipher.update(plaintext, 'utf8', 'hex');
+    ciphertext += cipher.final('hex');
+
+    const tag = cipher.getAuthTag().toString('hex');
+
+    return {
+      ciphertext,
+      tag,
+      iv,
+    };
+  }
+
+  // Helper function to generate a random float within a range
+  private randomFloatInRange(min: number, max: number): number {
+    return Math.random() * (max - min) + min;
+  }
+
+  // Helper function to generate a random sea state
+  private randomSeaState(): string {
+    const states = [
+      'calm',
+      'slight',
+      'moderate',
+      'rough',
+      'very rough',
+      'high',
+      'very high',
+      'phenomenal',
+    ];
+    return states[Math.floor(Math.random() * states.length)];
+  }
+
+  async createShipObject(): Promise<CreateShipDto> {
     const enums = Object.keys(CargoStatus);
     // Generate random values for each field except mileage and fuel level
     const gpsLocation = {
@@ -80,68 +160,10 @@ export class ShipService {
 
     this.currentObject = createShipDto;
 
-    // add condition
-    if (this.shipQueue.length < 5) {
-      this.shipQueue.push({ ...createShipDto, timestamp: new Date() });
-    } else {
-      await Promise.all(
-        this.shipQueue.map(async ({ timestamp, ...createShipDto }) => {
-          // send data to chain
-          const ciphertext = await this.sendToProgram(createShipDto);
-
-          console.log(ciphertext);
-
-          const temp: ShipDataEncryptedDto = {
-            dataCommitmentCipher: ciphertext,
-            timestamp,
-          };
-
-          return (await this.shipRepository.create(temp)).toObject();
-
-          // return (await this.shipRepository.create(createShipDto)).toObject();
-        }),
-      );
-
-      this.shipQueue = [];
-    }
+    return createShipDto;
   }
 
-  private encrypt(plaintext, key, iv) {
-    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-
-    let ciphertext = cipher.update(plaintext, 'utf8', 'hex');
-    ciphertext += cipher.final('hex');
-
-    const tag = cipher.getAuthTag().toString('hex');
-
-    return {
-      ciphertext,
-      tag,
-      iv,
-    };
-  }
-
-  // Helper function to generate a random float within a range
-  private randomFloatInRange(min: number, max: number): number {
-    return Math.random() * (max - min) + min;
-  }
-
-  // Helper function to generate a random sea state
-  private randomSeaState(): string {
-    const states = [
-      'calm',
-      'slight',
-      'moderate',
-      'rough',
-      'very rough',
-      'high',
-      'very high',
-      'phenomenal',
-    ];
-    return states[Math.floor(Math.random() * states.length)];
-  }
-
-  async sendToProgram(createShipDto: CreateShipDto): Promise<string> {
+  async encryptShip(createShipDto: CreateShipDto): Promise<string> {
     const serialized = cbor.encode(createShipDto);
     const data = Buffer.from(serialized);
 
@@ -152,31 +174,28 @@ export class ShipService {
 
     const encryptedData = this.encrypt(data, masterKey, iv);
 
+    return encryptedData.ciphertext;
+  }
+
+  async sendToProgram(encryptedShips: string) {
     // const ciphertext = encryptedData.ciphertext;
     // const tag = encryptedData.tag;
-
     // const serializedEncryptedData = this.serializeEncryptedData(encryptedData);
     // const ciphertextBuffer = serializedEncryptedData.ciphertext;
     // const tagBuffer = serializedEncryptedData.tag;
     // const ivBuffer = serializedEncryptedData.iv;
     // const dataTimestamp = Date.now();
-
     // const ship = anchor.web3.Keypair.generate();
-
     // const program = require('./constants/idl/pont_network.json');
-
     // const [shipAccountAddress, bump1] = PublicKey.findProgramAddressSync(
     // 	[Buffer.from("ship_account"), ship.publicKey.toBuffer()],
     // 	program.programId
     // );
-
     // const shipAccount = await program.account.shipAccount.fetch(shipAccountAddress);
-
     // const [dataAccount, bump2] = PublicKey.findProgramAddressSync(
-    // 	[Buffer.from("data_account"), ship.publicKey.toBuffer(), new anchor.BN(shipAccount.dataAccounts.length, "le").toArrayLike(Buffer, "le", 8)],
+    // 	[Buffer.from("data_account"), ship.publicKey.toBuffer(), new anchor.BN(shipAccount.dataAccounts.length - 1, "le").toArrayLike(Buffer, "le", 8)],
     // 	program.programId
     // );
-
     // const tx = await program.methods
     // 	.addDataFingerprint(ciphertextBuffer, tagBuffer, ivBuffer, new anchor.BN(dataTimestamp))
     // 	.accountsStrict({
@@ -185,8 +204,6 @@ export class ShipService {
     // 	})
     // 	.signers([ship])
     // 	.rpc();
-
-    return encryptedData.ciphertext;
   }
 
   // async findAllByID(shipID: string): Promise<Ship[]> {
@@ -220,14 +237,6 @@ export class ShipService {
     const tagBytes = Buffer.from(encryptedData.tag, 'hex');
     const ivBytes = encryptedData.iv.buffer;
 
-    // const totalLength = ciphertextBytes.length + tagBytes.length + ivBytes.length;
-    // const serializedData = new Uint8Array(totalLength);
-
-    // serializedData.set(ciphertextBytes, 0);
-    // serializedData.set(tagBytes, ciphertextBytes.length);
-    // serializedData.set(ivBytes, ciphertextBytes.length + tagBytes.length);
-
-    // return serializedData;
     return {
       ciphertext: ciphertextBytes,
       tag: tagBytes,

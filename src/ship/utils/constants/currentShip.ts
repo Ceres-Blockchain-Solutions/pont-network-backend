@@ -1,4 +1,4 @@
-import { CargoStatus } from '../dto/create-ship.dto';
+import { CargoStatus } from '../../dto/create-ship.dto';
 
 export const currentShip = {
   shipID: '2kBcbo8q4m2BQHBM6YXdqzKvs3jngDKeuasLUbjpzLbw',
