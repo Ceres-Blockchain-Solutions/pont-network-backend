@@ -1,28 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { CargoStatus, CreateShipDto } from './dto/create-ship.dto';
 import { ShipRepository } from './repository/ship.repository';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
-import * as crypto from 'crypto';
-import * as cbor from 'cbor';
 import { ShipDataEncryptedDto } from './dto/create-ship-encypted.dto';
 import { ShipDataEncrypted } from './entities/shipData.entity';
 // import { Ship } from './entities/ship.entity';
 // import * as anchor from '@coral-xyz/anchor';
 // import { Connection, PublicKey, Keypair } from '@solana/web3.js';
 // import { Program } from '@coral-xyz/anchor';
-import { currentShip } from './utils/constants/currentShip';
 import { createShipObject, encryptShip } from './utils/helpers/generateValues';
 
 @Injectable()
 export class ShipService {
   constructor(private readonly shipRepository: ShipRepository) {}
 
-  private mileage = 0; // Initialize mileage
-  private fuelLevel = 100; // Initialize fuel level to 100 (full)
   private shipQueue = [];
   private shipEncryptedDataQueue = [];
-  private currentObject: CreateShipDto = currentShip;
 
   // async create(createShipDto: CreateShipDto) {
   //   this.mileage = createShipDto.mileage;
@@ -37,7 +30,8 @@ export class ShipService {
   async fetchSensorData() {
     const newShipDataReadings = await createShipObject();
 
-    if (this.shipQueue.length < 120) {
+    // add 120
+    if (this.shipQueue.length < 4) {
       this.shipQueue.push({ ...newShipDataReadings, timestamp: new Date() });
     } else {
       let encryptedShipString = '';
@@ -62,7 +56,7 @@ export class ShipService {
       );
 
       // add check for internet/chain connection
-      if (true) {
+      if (false) {
         await Promise.all(
           this.shipEncryptedDataQueue.map(async (temp) => {
             await this.sendToProgram(temp);
@@ -72,6 +66,7 @@ export class ShipService {
         this.shipEncryptedDataQueue = [];
       } else {
         this.shipEncryptedDataQueue.push(encryptedShipString);
+        console.log(encryptedShipString);
       }
 
       this.shipQueue = [];
@@ -124,5 +119,4 @@ export class ShipService {
   async findAll(): Promise<ShipDataEncrypted[]> {
     return await this.shipRepository.findAll();
   }
-
 }
