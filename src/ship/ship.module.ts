@@ -8,11 +8,9 @@ import {
   ShipDataEncrypted,
   ShipDataEncryptedSchema,
 } from './entities/shipData.entity';
-// import { Ship, ShipSchema } from './entities/ship.entity';
 
 @Module({
   imports: [
-    // MongooseModule.forFeature([{ name: Ship.name, schema: ShipSchema }]),
     MongooseModule.forFeature([
       { name: ShipDataEncrypted.name, schema: ShipDataEncryptedSchema },
     ]),
