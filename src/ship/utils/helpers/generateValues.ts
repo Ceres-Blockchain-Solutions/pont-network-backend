@@ -128,3 +128,32 @@ export function serializeEncryptedData(encryptedData: {
     iv: Buffer.from(ivBytes),
   };
 }
+
+export async function sendToProgram(encryptedShips: string) {
+  // const ciphertext = encryptedData.ciphertext;
+  // const tag = encryptedData.tag;
+  // const serializedEncryptedData = this.serializeEncryptedData(encryptedData);
+  // const ciphertextBuffer = serializedEncryptedData.ciphertext;
+  // const tagBuffer = serializedEncryptedData.tag;
+  // const ivBuffer = serializedEncryptedData.iv;
+  // const dataTimestamp = Date.now();
+  // const ship = anchor.web3.Keypair.generate();
+  // const program = require('./constants/idl/pont_network.json');
+  // const [shipAccountAddress, bump1] = PublicKey.findProgramAddressSync(
+  // 	[Buffer.from("ship_account"), ship.publicKey.toBuffer()],
+  // 	program.programId
+  // );
+  // const shipAccount = await program.account.shipAccount.fetch(shipAccountAddress);
+  // const [dataAccount, bump2] = PublicKey.findProgramAddressSync(
+  // 	[Buffer.from("data_account"), ship.publicKey.toBuffer(), new anchor.BN(shipAccount.dataAccounts.length - 1, "le").toArrayLike(Buffer, "le", 8)],
+  // 	program.programId
+  // );
+  // const tx = await program.methods
+  // 	.addDataFingerprint(ciphertextBuffer, tagBuffer, ivBuffer, new anchor.BN(dataTimestamp))
+  // 	.accountsStrict({
+  // 		dataAccount,
+  // 		ship: ship.publicKey,
+  // 	})
+  // 	.signers([ship])
+  // 	.rpc();
+}
