@@ -9,13 +9,17 @@ import {
   sendToProgram,
 } from './utils/helpers/generateValues';
 import { numberOfReadings } from './utils/constants/currentShip';
+import {
+  loadEncryptedShipQueueFromFile,
+  saveEncryptedShipQueueToFile,
+} from './utils/helpers/fileHelpers';
 
 @Injectable()
 export class ShipService {
   constructor(private readonly shipRepository: ShipRepository) {}
 
   private shipQueue = [];
-  private shipEncryptedDataQueue = [];
+  private shipEncryptedDataQueue = loadEncryptedShipQueueFromFile();
 
   async create(shipDataEncryptedDto: ShipDataEncryptedDto) {
     return (await this.shipRepository.create(shipDataEncryptedDto)).toObject();
@@ -60,6 +64,8 @@ export class ShipService {
         this.shipEncryptedDataQueue.push(encryptedShipString);
         console.log(encryptedShipString);
       }
+
+      saveEncryptedShipQueueToFile(this.shipEncryptedDataQueue);
 
       this.shipQueue = [];
     }

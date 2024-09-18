@@ -22,5 +22,4 @@ export class ShipController {
   findAllByID(@Param('shipID') shipID: string) {
     return this.shipService.findAllByID(shipID);
   }
-
 }
