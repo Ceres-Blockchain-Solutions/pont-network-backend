@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { ShipRepository } from './repository/ship.repository';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ShipDataEncryptedDto } from './dto/create-ship-encypted.dto';
+import { ShipDataEncryptedDto } from './dto/create-ship-encrypted.dto';
 import { ShipDataEncrypted } from './entities/shipData.entity';
 import {
   createShipObject,
   encryptShip,
   sendToProgram,
+  numberOfReadings,
 } from './utils/helpers/generateValues';
-import { numberOfReadings } from './utils/constants/currentShip';
 import {
   loadEncryptedShipQueueFromFile,
   saveEncryptedShipQueueToFile,
@@ -19,7 +19,7 @@ export class ShipService {
   constructor(private readonly shipRepository: ShipRepository) {}
 
   private shipQueue = [];
-  private shipEncryptedDataQueue = loadEncryptedShipQueueFromFile();
+  private shipEncryptedDataQueue = [];
 
   async create(shipDataEncryptedDto: ShipDataEncryptedDto) {
     return (await this.shipRepository.create(shipDataEncryptedDto)).toObject();
@@ -27,6 +27,7 @@ export class ShipService {
 
   @Cron(CronExpression.EVERY_5_SECONDS)
   async fetchSensorData() {
+    this.shipEncryptedDataQueue = loadEncryptedShipQueueFromFile();
     const newShipDataReadings = await createShipObject();
 
     if (this.shipQueue.length < numberOfReadings) {
@@ -36,11 +37,10 @@ export class ShipService {
 
       await Promise.all(
         this.shipQueue.map(async ({ timestamp, ...createShipDto }) => {
+          console.log(createShipDto);
           const ciphertext = await encryptShip(createShipDto);
 
           encryptedShipString += ciphertext;
-
-          console.log(ciphertext);
 
           const temp: ShipDataEncryptedDto = {
             dataCommitmentCipher: ciphertext,
@@ -52,7 +52,7 @@ export class ShipService {
       );
 
       // add check for internet/chain connection
-      if (true) {
+      if (false) {
         await Promise.all(
           this.shipEncryptedDataQueue.map(async (temp) => {
             await sendToProgram(temp);
@@ -62,9 +62,9 @@ export class ShipService {
         this.shipEncryptedDataQueue = [];
       } else {
         this.shipEncryptedDataQueue.push(encryptedShipString);
-        console.log(encryptedShipString);
       }
 
+      console.log(this.shipEncryptedDataQueue);
       saveEncryptedShipQueueToFile(this.shipEncryptedDataQueue);
 
       this.shipQueue = [];

@@ -4,6 +4,8 @@ import { currentShip } from '../../utils/constants/currentShip';
 import * as crypto from 'crypto';
 import * as cbor from 'cbor';
 
+export const numberOfReadings = 120;
+
 let mileage = 0; // Initialize mileage
 let fuelLevel = 100; // Initialize fuel level to 100 (full)
 let currentObject: CreateShipDto = currentShip;

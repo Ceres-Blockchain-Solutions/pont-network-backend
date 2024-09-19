@@ -1,9 +1,4 @@
 import { CargoStatus } from '../../dto/create-ship.dto';
-// import * as anchor from '@coral-xyz/anchor';
-// import { Connection, PublicKey, Keypair } from '@solana/web3.js';
-// import { Program } from '@coral-xyz/anchor';
-
-export const numberOfReadings = 120;
 
 export const currentShip = {
   shipID: '2kBcbo8q4m2BQHBM6YXdqzKvs3jngDKeuasLUbjpzLbw',

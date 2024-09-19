@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ShipService } from './ship.service';
-import { ShipDataEncryptedDto } from './dto/create-ship-encypted.dto';
+import { ShipDataEncryptedDto } from './dto/create-ship-encrypted.dto';
 
 @ApiTags('Ship')
 @Controller('ship')
