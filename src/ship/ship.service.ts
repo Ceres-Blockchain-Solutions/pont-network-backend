@@ -31,25 +31,19 @@ export class ShipService {
     const newShipDataReadings = await createShipObject();
 
     if (this.shipQueue.length < numberOfReadings) {
-      this.shipQueue.push({ ...newShipDataReadings, timestamp: new Date() });
+      // this.shipQueue.push({ ...newShipDataReadings, timestamp: new Date() });
+      this.shipQueue.push({ ...newShipDataReadings });
     } else {
-      let encryptedShipString = '';
+      let encryptedData = await encryptShip(this.shipQueue);
 
-      await Promise.all(
-        this.shipQueue.map(async ({ timestamp, ...createShipDto }) => {
-          console.log(createShipDto);
-          const ciphertext = await encryptShip(createShipDto);
+      const temp: ShipDataEncryptedDto = {
+        dataCommitmentCipher: encryptedData.ciphertext,
+        iv: encryptedData.iv,
+        tag: encryptedData.tag,
+        timestamp: Date.now(),
+      };
 
-          encryptedShipString += ciphertext;
-
-          const temp: ShipDataEncryptedDto = {
-            dataCommitmentCipher: ciphertext,
-            timestamp,
-          };
-
-          return (await this.shipRepository.create(temp)).toObject();
-        }),
-      );
+      (await this.shipRepository.create(temp)).toObject();
 
       // add check for internet/chain connection
       if (false) {
@@ -61,7 +55,7 @@ export class ShipService {
 
         this.shipEncryptedDataQueue = [];
       } else {
-        this.shipEncryptedDataQueue.push(encryptedShipString);
+        this.shipEncryptedDataQueue.push(encryptedData);
       }
 
       console.log(this.shipEncryptedDataQueue);

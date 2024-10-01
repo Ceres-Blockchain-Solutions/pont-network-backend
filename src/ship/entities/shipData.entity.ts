@@ -7,6 +7,12 @@ export class ShipDataEncrypted extends Document {
   dataCommitmentCipher: string;
 
   @Prop({ required: true })
+  tag: string;
+
+  @Prop({ required: true })
+  iv: string;
+
+  @Prop({ required: true })
   timestamp: number;
 }
 

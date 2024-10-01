@@ -4,7 +4,7 @@ import { currentShip } from '../../utils/constants/currentShip';
 import * as crypto from 'crypto';
 import * as cbor from 'cbor';
 
-export const numberOfReadings = 120;
+export const numberOfReadings = 4;
 
 let mileage = 0; // Initialize mileage
 let fuelLevel = 100; // Initialize fuel level to 100 (full)
@@ -95,10 +95,8 @@ export async function createShipObject(): Promise<CreateShipDto> {
   return createShipDto;
 }
 
-export async function encryptShip(
-  createShipDto: CreateShipDto,
-): Promise<string> {
-  const serialized = cbor.encode(createShipDto);
+export async function encryptShip(createShipsDto: CreateShipDto[]) {
+  const serialized = cbor.encode(createShipsDto);
   const data = Buffer.from(serialized);
 
   const iv = new Uint32Array(3);
@@ -108,7 +106,7 @@ export async function encryptShip(
 
   const encryptedData = encrypt(data, masterKey, iv);
 
-  return encryptedData.ciphertext;
+  return encryptedData;
 }
 
 export function serializeEncryptedData(encryptedData: {
@@ -131,7 +129,7 @@ export function serializeEncryptedData(encryptedData: {
   };
 }
 
-export async function sendToProgram(encryptedShips: string) {
+export async function sendToProgram(encryptedData) {
   // const ciphertext = encryptedData.ciphertext;
   // const tag = encryptedData.tag;
   // const serializedEncryptedData = this.serializeEncryptedData(encryptedData);

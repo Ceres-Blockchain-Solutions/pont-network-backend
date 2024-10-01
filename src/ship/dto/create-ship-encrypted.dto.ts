@@ -6,6 +6,13 @@ export class ShipDataEncryptedDto {
   dataCommitmentCipher: string;
 
   @IsNotEmpty()
+  @IsString()
+  tag: string;
+
+  @IsNotEmpty()
+  iv: string;
+
+  @IsNotEmpty()
   @IsNumber()
   timestamp: number;
 }
