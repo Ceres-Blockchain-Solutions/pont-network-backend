@@ -35,7 +35,8 @@ export class ShipService {
       this.shipQueue.push({ ...newShipDataReadings });
     } else {
       let encryptedData = await encryptShip(this.shipQueue);
-
+      encryptedData.iv = Buffer.from(encryptedData.iv.buffer).toString('hex');
+      
       const temp: ShipDataEncryptedDto = {
         dataCommitmentCipher: encryptedData.ciphertext,
         iv: encryptedData.iv,
