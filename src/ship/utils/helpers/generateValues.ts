@@ -12,6 +12,7 @@ export const numberOfReadings = 4;
 
 let mileage = 0; // Initialize mileage
 let fuelLevel = 100; // Initialize fuel level to 100 (full)
+let currentTime = Date.now();
 let currentObject: CreateShipDto = currentShip;
 
 export function encrypt(plaintext, key, iv) {
@@ -66,6 +67,7 @@ export async function createShipObject(): Promise<CreateShipDto> {
   // Increment mileage and decrement fuel level
   mileage += randomFloatInRange(0.1, 2.0); // Increment mileage by a small random value
   fuelLevel -= randomFloatInRange(0.1, 1.0); // Decrement fuel level by a small random value
+  currentTime += 5;
   if (fuelLevel < 0) fuelLevel = 0; // Ensure fuel level doesn't go negative
 
   const createShipDto: CreateShipDto = {
@@ -92,6 +94,7 @@ export async function createShipObject(): Promise<CreateShipDto> {
       currentObject.bar + 2,
     ),
     cargo: CargoStatus[enums[Math.floor(Math.random() * enums.length)]],
+    time: currentTime,
   };
 
   currentObject = createShipDto;

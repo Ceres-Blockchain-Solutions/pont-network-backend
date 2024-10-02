@@ -15,5 +15,5 @@ export const currentShip = {
   hum: 60,
   bar: 1000,
   cargo: CargoStatus[0],
-  timestamp: 1725629183002,
+  time: Date.now(),
 };

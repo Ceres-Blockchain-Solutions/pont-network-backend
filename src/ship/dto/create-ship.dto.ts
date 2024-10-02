@@ -50,4 +50,8 @@ export class CreateShipDto {
   @IsNotEmpty()
   @IsEnum(CargoStatus)
   cargo: CargoStatus; // cargoStatus -> cargo
+
+  @IsNotEmpty()
+  @IsNumber()
+  time: number;
 }
