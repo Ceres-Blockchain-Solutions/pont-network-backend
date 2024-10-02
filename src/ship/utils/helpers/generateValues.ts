@@ -67,7 +67,7 @@ export async function createShipObject(): Promise<CreateShipDto> {
   // Increment mileage and decrement fuel level
   mileage += randomFloatInRange(0.1, 2.0); // Increment mileage by a small random value
   fuelLevel -= randomFloatInRange(0.1, 1.0); // Decrement fuel level by a small random value
-  currentTime += 5;
+  currentTime += 5000;
   if (fuelLevel < 0) fuelLevel = 0; // Ensure fuel level doesn't go negative
 
   const createShipDto: CreateShipDto = {
