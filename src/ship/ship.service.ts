@@ -30,9 +30,9 @@ export class ShipService {
     this.shipEncryptedDataQueue = loadEncryptedShipQueueFromFile();
     const newShipDataReadings = await createShipObject();
 
+    this.shipQueue.push({ ...newShipDataReadings });
     if (this.shipQueue.length < numberOfReadings) {
       // this.shipQueue.push({ ...newShipDataReadings, timestamp: new Date() });
-      this.shipQueue.push({ ...newShipDataReadings });
     } else {
       let encryptedData = await encryptShip(this.shipQueue);
       encryptedData.iv = Buffer.from(encryptedData.iv.buffer).toString('hex');
