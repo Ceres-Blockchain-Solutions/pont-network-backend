@@ -3,6 +3,10 @@ import { currentShip } from '../../utils/constants/currentShip';
 
 import * as crypto from 'crypto';
 import * as cbor from 'cbor';
+import { Connection, PublicKey } from '@solana/web3.js';
+import * as anchor from '@coral-xyz/anchor';
+import IDL from "../constants/idl/pont_network.json"
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
 export const numberOfReadings = 4;
 
@@ -49,13 +53,13 @@ export async function createShipObject(): Promise<CreateShipDto> {
   const enums = Object.keys(CargoStatus);
   // Generate random values for each field except mileage and fuel level
   const gpsLocation = {
-    latitude: randomFloatInRange(
-      currentObject.gpsLocation.latitude - 5,
-      currentObject.gpsLocation.latitude + 5,
+    lat: randomFloatInRange(
+      currentObject.gps.lat - 5,
+      currentObject.gps.lat + 5,
     ), // Latitude range -90 to 90
-    longitude: randomFloatInRange(
-      currentObject.gpsLocation.longitude - 5,
-      currentObject.gpsLocation.longitude + 5,
+    long: randomFloatInRange(
+      currentObject.gps.long - 5,
+      currentObject.gps.long + 5,
     ), // Longitude range -180 to 180
   };
 
@@ -65,29 +69,29 @@ export async function createShipObject(): Promise<CreateShipDto> {
   if (fuelLevel < 0) fuelLevel = 0; // Ensure fuel level doesn't go negative
 
   const createShipDto: CreateShipDto = {
-    shipID: '2kBcbo8q4m2BQHBM6YXdqzKvs3jngDKeuasLUbjpzLbw',
-    gpsLocation: gpsLocation,
-    mileage: mileage,
-    engineLoad: randomFloatInRange(10, 100),
-    fuelLevel: fuelLevel,
-    seaState: randomSeaState(),
-    seaSurfaceTemperature: randomFloatInRange(
-      currentObject.seaSurfaceTemperature - 2,
-      currentObject.seaSurfaceTemperature + 2,
+    id: '2kBcbo8q4m2BQHBM6YXdqzKvs3jngDKeuasLUbjpzLbw',
+    gps: gpsLocation,
+    mil: mileage,
+    eng: randomFloatInRange(10, 100),
+    fuel: fuelLevel,
+    sea: randomSeaState(),
+    sst: randomFloatInRange(
+      currentObject.sst - 2,
+      currentObject.sst + 2,
     ),
-    airTemperature: randomFloatInRange(
-      currentObject.airTemperature - 2,
-      currentObject.airTemperature + 2,
+    air: randomFloatInRange(
+      currentObject.air - 2,
+      currentObject.air + 2,
     ),
-    humidity: randomFloatInRange(
-      currentObject.humidity - 2,
-      currentObject.humidity + 2,
+    hum: randomFloatInRange(
+      currentObject.hum - 2,
+      currentObject.hum + 2,
     ),
-    barometricPressure: randomFloatInRange(
-      currentObject.barometricPressure - 2,
-      currentObject.barometricPressure + 2,
+    bar: randomFloatInRange(
+      currentObject.bar - 2,
+      currentObject.bar + 2,
     ),
-    cargoStatus: CargoStatus[enums[Math.floor(Math.random() * enums.length)]],
+    cargo: CargoStatus[enums[Math.floor(Math.random() * enums.length)]],
   };
 
   currentObject = createShipDto;
@@ -96,13 +100,17 @@ export async function createShipObject(): Promise<CreateShipDto> {
 }
 
 export async function encryptShip(createShipsDto: CreateShipDto[]) {
+  console.log("CreateShipsDto: ", createShipsDto);
+  // print size of all properties of createShipsDto
+
   const serialized = cbor.encode(createShipsDto);
+  console.log("Serialized: ", serialized.length);
   const data = Buffer.from(serialized);
 
   const iv = new Uint32Array(3);
   crypto.getRandomValues(iv);
-  const masterKey = new Uint32Array(8);
-  crypto.getRandomValues(masterKey);
+  const masterKey = new Uint8Array(32);
+  // crypto.getRandomValues(masterKey);
 
   const encryptedData = encrypt(data, masterKey, iv);
 
@@ -112,7 +120,7 @@ export async function encryptShip(createShipsDto: CreateShipDto[]) {
 export function serializeEncryptedData(encryptedData: {
   ciphertext: string;
   tag: string;
-  iv: Uint32Array;
+  iv: string;
 }): {
   ciphertext: Buffer;
   tag: Buffer;
@@ -120,40 +128,54 @@ export function serializeEncryptedData(encryptedData: {
 } {
   const ciphertextBytes = Buffer.from(encryptedData.ciphertext, 'hex');
   const tagBytes = Buffer.from(encryptedData.tag, 'hex');
-  const ivBytes = encryptedData.iv.buffer;
+  const ivBytes = Buffer.from(encryptedData.iv, 'hex');
 
   return {
     ciphertext: ciphertextBytes,
     tag: tagBytes,
-    iv: Buffer.from(ivBytes),
+    iv: ivBytes,
   };
 }
 
 export async function sendToProgram(encryptedData) {
-  // const ciphertext = encryptedData.ciphertext;
-  // const tag = encryptedData.tag;
-  // const serializedEncryptedData = this.serializeEncryptedData(encryptedData);
-  // const ciphertextBuffer = serializedEncryptedData.ciphertext;
-  // const tagBuffer = serializedEncryptedData.tag;
-  // const ivBuffer = serializedEncryptedData.iv;
-  // const dataTimestamp = Date.now();
-  // const ship = anchor.web3.Keypair.generate();
-  // const program = require('./constants/idl/pont_network.json');
-  // const [shipAccountAddress, bump1] = PublicKey.findProgramAddressSync(
-  // 	[Buffer.from("ship_account"), ship.publicKey.toBuffer()],
-  // 	program.programId
-  // );
-  // const shipAccount = await program.account.shipAccount.fetch(shipAccountAddress);
-  // const [dataAccount, bump2] = PublicKey.findProgramAddressSync(
-  // 	[Buffer.from("data_account"), ship.publicKey.toBuffer(), new anchor.BN(shipAccount.dataAccounts.length - 1, "le").toArrayLike(Buffer, "le", 8)],
-  // 	program.programId
-  // );
-  // const tx = await program.methods
-  // 	.addDataFingerprint(ciphertextBuffer, tagBuffer, ivBuffer, new anchor.BN(dataTimestamp))
-  // 	.accountsStrict({
-  // 		dataAccount,
-  // 		ship: ship.publicKey,
-  // 	})
-  // 	.signers([ship])
-  // 	.rpc();
+  console.log('Sending encrypted data to program: ', encryptedData);
+
+  const ciphertext = encryptedData.ciphertext;
+  const tag = encryptedData.tag;
+  console.log("TEST1");
+  const serializedEncryptedData = serializeEncryptedData(encryptedData);
+  console.log("TEST1.5");
+  const ciphertextBuffer = serializedEncryptedData.ciphertext;
+  const tagBuffer = serializedEncryptedData.tag;
+  const ivBuffer = serializedEncryptedData.iv;
+  const dataTimestamp = Date.now();
+  const ship = anchor.web3.Keypair.fromSeed(new Uint8Array(32).fill(99));
+  console.log("TEST2");
+  const program = new anchor.Program(IDL as anchor.Idl, new anchor.AnchorProvider(new Connection("http://127.0.0.1:8899", { commitment: 'confirmed' }), new NodeWallet(ship)));
+  console.log("TEST3");
+  const [shipAccountAddress, bump1] = PublicKey.findProgramAddressSync(
+    [Buffer.from("ship_account"), ship.publicKey.toBuffer()],
+    program.programId
+  );
+
+  // @ts-ignore
+  const shipAccount = await program.account.shipAccount.fetch(shipAccountAddress);
+  console.log("TEST4");
+  const [dataAccount, bump2] = PublicKey.findProgramAddressSync(
+    [Buffer.from("data_account"), ship.publicKey.toBuffer(), new anchor.BN(shipAccount.dataAccounts.length - 1, "le").toArrayLike(Buffer, "le", 8)],
+    program.programId
+  );
+  console.log("TEST5");
+  console.log("Ciphertext length: ", ciphertextBuffer.length);
+  console.log("Tag length: ", tagBuffer.length);
+  console.log("IV length: ", ivBuffer.length);
+  console.log("Data timestamp size: ", new anchor.BN(dataTimestamp).toArrayLike(Buffer, "le", 8).length);
+  const tx = await program.methods
+    .addDataFingerprint(ciphertextBuffer, tagBuffer, ivBuffer, new anchor.BN(dataTimestamp))
+    .accountsStrict({
+      dataAccount,
+      ship: ship.publicKey,
+    })
+    .signers([ship])
+    .rpc();
 }

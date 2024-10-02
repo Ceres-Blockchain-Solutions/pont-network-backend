@@ -1,19 +1,19 @@
 import { CargoStatus } from '../../dto/create-ship.dto';
 
 export const currentShip = {
-  shipID: '2kBcbo8q4m2BQHBM6YXdqzKvs3jngDKeuasLUbjpzLbw',
-  gpsLocation: {
-    latitude: 0,
-    longitude: 0,
+  id: '2kBcbo8q4m2BQHBM6YXdqzKvs3jngDKeuasLUbjpzLbw',
+  gps: {
+    lat: 0,
+    long: 0,
   },
-  mileage: 0,
-  engineLoad: 4,
-  fuelLevel: 100,
-  seaState: 'calm',
-  seaSurfaceTemperature: 10,
-  airTemperature: 25,
-  humidity: 60,
-  barometricPressure: 1000,
-  cargoStatus: CargoStatus[0],
+  mil: 0,
+  eng: 4,
+  fuel: 100,
+  sea: 'calm',
+  sst: 10,
+  air: 25,
+  hum: 60,
+  bar: 1000,
+  cargo: CargoStatus[0],
   timestamp: 1725629183002,
 };

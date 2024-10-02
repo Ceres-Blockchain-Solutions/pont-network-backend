@@ -4,9 +4,9 @@ import { CargoStatus } from '../dto/create-ship.dto';
 
 export class Coordinate {
   @Prop({ required: true, min: -90, max: 90 })
-  latitude: number;
+  lat: number;
   @Prop({ required: true, min: -180, max: 180 })
-  longitude: number;
+  long: number;
 }
 
 @Schema()

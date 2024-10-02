@@ -35,6 +35,7 @@ export class ShipService {
       this.shipQueue.push({ ...newShipDataReadings });
     } else {
       let encryptedData = await encryptShip(this.shipQueue);
+      encryptedData.iv = Buffer.from(encryptedData.iv.buffer).toString('hex');
 
       const temp: ShipDataEncryptedDto = {
         dataCommitmentCipher: encryptedData.ciphertext,
@@ -46,16 +47,16 @@ export class ShipService {
       (await this.shipRepository.create(temp)).toObject();
 
       // add check for internet/chain connection
-      if (false) {
+      this.shipEncryptedDataQueue.push(encryptedData);
+      if (true) {
         await Promise.all(
           this.shipEncryptedDataQueue.map(async (temp) => {
             await sendToProgram(temp);
           }),
         );
-
         this.shipEncryptedDataQueue = [];
       } else {
-        this.shipEncryptedDataQueue.push(encryptedData);
+        // this.shipEncryptedDataQueue.push(encryptedData);
       }
 
       console.log(this.shipEncryptedDataQueue);
