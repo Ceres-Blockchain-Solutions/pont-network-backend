@@ -10,44 +10,44 @@ export enum CargoStatus {
 export class CreateShipDto {
   @IsNotEmpty()
   @IsString()
-  shipID: string;
+  id: string; // shipID -> id
 
   @IsNotEmpty()
-  gpsLocation: Coordinate;
-
-  @IsNotEmpty()
-  @IsNumber()
-  mileage: number;
+  gps: Coordinate; // gpsLocation -> gps
 
   @IsNotEmpty()
   @IsNumber()
-  engineLoad: number;
+  mil: number; // mileage -> mil
 
   @IsNotEmpty()
   @IsNumber()
-  fuelLevel: number;
+  eng: number; // engineLoad -> eng
+
+  @IsNotEmpty()
+  @IsNumber()
+  fuel: number; // fuelLevel -> fuel
 
   @IsNotEmpty()
   @IsString()
-  seaState: string;
+  sea: string; // seaState -> sea
 
   @IsNotEmpty()
   @IsNumber()
-  seaSurfaceTemperature: number;
+  sst: number; // seaSurfaceTemperature -> sst
 
   @IsNotEmpty()
   @IsNumber()
-  airTemperature: number;
+  air: number; // airTemperature -> air
 
   @IsNotEmpty()
   @IsNumber()
-  humidity: number;
+  hum: number; // humidity -> hum
 
   @IsNotEmpty()
   @IsNumber()
-  barometricPressure: number;
+  bar: number; // barometricPressure -> bar
 
   @IsNotEmpty()
   @IsEnum(CargoStatus)
-  cargoStatus: CargoStatus;
+  cargo: CargoStatus; // cargoStatus -> cargo
 }

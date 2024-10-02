@@ -137,6 +137,10 @@
           "type": {
             "vec": "pubkey"
           }
+        },
+        {
+          "name": "timestamp",
+          "type": "u64"
         }
       ]
     },
@@ -566,6 +570,12 @@
       ]
     }
   ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "ExternalObserverAlreadyRequested"
+    }
+  ],
   "types": [
     {
       "name": "DataAccount",
@@ -727,6 +737,12 @@
             }
           },
           {
+            "name": "unapproved_external_observers_x25519_pks",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
             "name": "external_observers",
             "type": {
               "vec": "pubkey"
@@ -783,6 +799,12 @@
             "name": "data_accounts",
             "type": {
               "vec": "pubkey"
+            }
+          },
+          {
+            "name": "data_account_starting_timestamps",
+            "type": {
+              "vec": "u64"
             }
           }
         ]
