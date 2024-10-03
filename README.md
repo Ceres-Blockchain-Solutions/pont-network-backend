@@ -1,6 +1,6 @@
 # Pont Network Backend
 
-This repository contains the backend service for the Pont Network, built with [NestJS](https://nestjs.com/). It is designed to provide a robust and scalable API service for interacting with the Pont Network ecosystem. The software runs on ships and represents the Data Acquisition Unit (DAU), which reads data from ship sensors and broadcasts it to the Solana blockchain."
+This repository contains the backend service for the Pont Network, built with [NestJS](https://nestjs.com/). It is designed to provide a robust and scalable API service for interacting with the Pont Network ecosystem. The software runs on ships and represents the Data Acquisition Unit (DAU), which reads data from ship sensors and broadcasts it to the Solana blockchain.
 
 ## Table of Contents
 
