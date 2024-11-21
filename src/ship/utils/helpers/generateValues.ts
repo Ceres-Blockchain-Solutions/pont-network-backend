@@ -145,6 +145,45 @@ export async function sendToProgram(encryptedData) {
 
   const ciphertext = encryptedData.ciphertext;
   const tag = encryptedData.tag;
+  const serializedEncryptedData = serializeEncryptedData(encryptedData);
+  const ciphertextBuffer = serializedEncryptedData.ciphertext;
+  const tagBuffer = serializedEncryptedData.tag;
+  const ivBuffer = serializedEncryptedData.iv;
+  const dataTimestamp = Date.now();
+  const ship = anchor.web3.Keypair.fromSeed(new Uint8Array(32).fill(99));
+  const program = new anchor.Program(IDL as anchor.Idl, new anchor.AnchorProvider(new Connection("http://127.0.0.1:8899", { commitment: 'confirmed' }), new NodeWallet(ship)));
+  const [shipAccountAddress, bump1] = PublicKey.findProgramAddressSync(
+    [Buffer.from("ship_account"), ship.publicKey.toBuffer()],
+    program.programId
+  );
+
+  // @ts-ignore
+  const shipAccount = await program.account.shipAccount.fetch(shipAccountAddress);
+  const [dataAccount, bump2] = PublicKey.findProgramAddressSync(
+    [Buffer.from("data_account"), ship.publicKey.toBuffer(), new anchor.BN(shipAccount.dataAccounts.length - 1, "le").toArrayLike(Buffer, "le", 8)],
+    program.programId
+  );
+  console.log("Ciphertext length: ", ciphertextBuffer.length);
+  console.log("Tag length: ", tagBuffer.length);
+  console.log("IV length: ", ivBuffer.length);
+  console.log("Data timestamp size: ", new anchor.BN(dataTimestamp).toArrayLike(Buffer, "le", 8).length);
+  const tx = await program.methods
+    .addDataFingerprint(ciphertextBuffer, tagBuffer, ivBuffer, new anchor.BN(dataTimestamp))
+    .accountsStrict({
+      dataAccount,
+      ship: ship.publicKey,
+    })
+    .signers([ship])
+    .rpc();
+
+  console.log("Transaction signature: ", tx);
+}
+
+export async function sendToProgramTest(encryptedData) {
+  console.log('Sending encrypted data to program: ', encryptedData);
+
+  const ciphertext = encryptedData.ciphertext;
+  const tag = encryptedData.tag;
   console.log("TEST1");
   const serializedEncryptedData = serializeEncryptedData(encryptedData);
   console.log("TEST1.5");
@@ -165,7 +204,7 @@ export async function sendToProgram(encryptedData) {
   const shipAccount = await program.account.shipAccount.fetch(shipAccountAddress);
   console.log("TEST4");
   const [dataAccount, bump2] = PublicKey.findProgramAddressSync(
-    [Buffer.from("data_account"), ship.publicKey.toBuffer(), new anchor.BN(shipAccount.dataAccounts.length - 1, "le").toArrayLike(Buffer, "le", 8)],
+    [Buffer.from("data_account"), ship.publicKey.toBuffer(), new anchor.BN(0, "le").toArrayLike(Buffer, "le", 8)],
     program.programId
   );
   console.log("TEST5");
@@ -181,4 +220,6 @@ export async function sendToProgram(encryptedData) {
     })
     .signers([ship])
     .rpc();
+
+  console.log("Transaction signature: ", tx);
 }
