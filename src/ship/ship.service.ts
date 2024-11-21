@@ -13,6 +13,7 @@ import {
   loadEncryptedShipQueueFromFile,
   saveEncryptedShipQueueToFile,
 } from './utils/helpers/fileHelpers';
+import { Ship } from './entities/ship.entity';
 
 @Injectable()
 export class ShipService {
@@ -29,6 +30,8 @@ export class ShipService {
   async fetchSensorData() {
     this.shipEncryptedDataQueue = loadEncryptedShipQueueFromFile();
     const newShipDataReadings = await createShipObject();
+
+    await this.shipRepository.addDecryptedShip(newShipDataReadings);
 
     this.shipQueue.push({ ...newShipDataReadings });
     if (this.shipQueue.length < numberOfReadings) {
@@ -74,5 +77,9 @@ export class ShipService {
 
   async findAll(): Promise<ShipDataEncrypted[]> {
     return await this.shipRepository.findAll();
+  }
+
+  async findAllDecrypted() {
+    return await this.shipRepository.findAllDecrypted();
   }
 }
