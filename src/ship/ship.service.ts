@@ -14,6 +14,7 @@ import {
   loadEncryptedShipQueueFromFile,
   saveEncryptedShipQueueToFile,
 } from './utils/helpers/fileHelpers';
+import { Ship } from './entities/ship.entity';
 
 @Injectable()
 export class ShipService implements OnModuleInit {
@@ -77,6 +78,8 @@ export class ShipService implements OnModuleInit {
     this.shipEncryptedDataQueue = loadEncryptedShipQueueFromFile();
     const newShipDataReadings = await createShipObject();
 
+    await this.shipRepository.addDecryptedShip(newShipDataReadings);
+
     this.shipQueue.push({ ...newShipDataReadings });
     if (this.shipQueue.length < numberOfReadings) {
       // this.shipQueue.push({ ...newShipDataReadings, timestamp: new Date() });
@@ -121,5 +124,9 @@ export class ShipService implements OnModuleInit {
 
   async findAll(): Promise<ShipDataEncrypted[]> {
     return await this.shipRepository.findAll();
+  }
+
+  async findAllDecrypted() {
+    return await this.shipRepository.findAllDecrypted();
   }
 }

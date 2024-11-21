@@ -12,40 +12,40 @@ export class Coordinate {
 @Schema()
 export class Ship extends Document {
   @Prop({ required: true, minlength: 32, maxlength: 44 })
-  shipID: string;
+  id: string;
 
   @Prop({ required: true })
-  gpsLocation: Coordinate;
+  gps: Coordinate;
 
   @Prop({ required: true, min: 0 })
-  mileage: number;
+  mil: number;
 
   @Prop({ required: true, min: 0, max: 100 })
-  engineLoad: number;
+  eng: number;
 
   @Prop({ required: true, min: 0, max: 100 })
-  fuelLevel: number;
+  fuel: number;
 
   @Prop({ required: true })
-  seaState: string;
+  sea: string;
 
   @Prop({ required: true, min: -2, max: 35 })
-  seaSurfaceTemperature: number;
+  sst: number;
 
   @Prop({ required: true, min: -50, max: 50 })
-  airTemperature: number;
+  air: number;
 
   @Prop({ required: true, min: 0, max: 100 })
-  humidity: number;
+  hum: number;
 
   @Prop({ required: true, min: 800, max: 1100 })
-  barometricPressure: number;
+  bar: number;
 
   @Prop({ required: true })
-  cargoStatus: CargoStatus;
+  cargo: CargoStatus;
 
   @Prop({ required: true, default: Date.now })
-  timestamp: number;
+  time: number;
 }
 
 export const ShipSchema = SchemaFactory.createForClass(Ship);

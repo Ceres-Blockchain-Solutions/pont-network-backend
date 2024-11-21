@@ -18,6 +18,11 @@ export class ShipController {
     return this.shipService.findAll();
   }
 
+  @Get('/get-all-ships-decrypted')
+  findAllDecrypted() {
+    return this.shipService.findAllDecrypted();
+  }
+
   @Get(':shipID')
   findAllByID(@Param('shipID') shipID: string) {
     return this.shipService.findAllByID(shipID);
