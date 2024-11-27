@@ -13,6 +13,11 @@ export class ShipController {
     return this.shipService.create(shipDataEncryptedDto);
   }
 
+  @Post('/create-initial-decrypted-ships')
+  createDecryptedShip() {
+    return this.shipService.createDecryptedShip();
+  }
+
   @Get('/get-all-ships')
   findAll() {
     return this.shipService.findAll();

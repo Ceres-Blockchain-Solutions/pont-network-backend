@@ -102,12 +102,53 @@ export async function createShipObject(): Promise<CreateShipDto> {
   return createShipDto;
 }
 
+export async function createShipFromLocationAndId(id: string, lat: number, long: number): Promise<CreateShipDto> {
+  const enums = Object.keys(CargoStatus);
+
+  // Increment mileage and decrement fuel level
+  mileage += randomFloatInRange(0.1, 2.0); // Increment mileage by a small random value
+  fuelLevel -= randomFloatInRange(0.1, 1.0); // Decrement fuel level by a small random value
+  currentTime += 5000;
+  if (fuelLevel < 0) fuelLevel = 0; // Ensure fuel level doesn't go negative
+
+  const createShipDto: CreateShipDto = {
+    id: id,
+    gps: {lat: lat, long: long},
+    mil: mileage,
+    eng: randomFloatInRange(10, 100),
+    fuel: fuelLevel,
+    sea: randomSeaState(),
+    sst: randomFloatInRange(
+      currentObject.sst - 2,
+      currentObject.sst + 2,
+    ),
+    air: randomFloatInRange(
+      currentObject.air - 2,
+      currentObject.air + 2,
+    ),
+    hum: randomFloatInRange(
+      currentObject.hum - 2,
+      currentObject.hum + 2,
+    ),
+    bar: randomFloatInRange(
+      currentObject.bar - 2,
+      currentObject.bar + 2,
+    ),
+    cargo: CargoStatus[enums[Math.floor(Math.random() * enums.length)]],
+    time: currentTime,
+  };
+
+  currentObject = createShipDto;
+
+  return createShipDto;
+}
+
 export async function encryptShip(createShipsDto: CreateShipDto[]) {
-  console.log("CreateShipsDto: ", createShipsDto);
+  // console.log("CreateShipsDto: ", createShipsDto);
   // print size of all properties of createShipsDto
 
   const serialized = cbor.encode(createShipsDto);
-  console.log("Serialized: ", serialized.length);
+  // console.log("Serialized: ", serialized.length);
   const data = Buffer.from(serialized);
 
   const iv = new Uint32Array(3);
@@ -141,7 +182,7 @@ export function serializeEncryptedData(encryptedData: {
 }
 
 export async function sendToProgram(encryptedData) {
-  console.log('Sending encrypted data to program: ', encryptedData);
+  // console.log('Sending encrypted data to program: ', encryptedData);
 
   const ciphertext = encryptedData.ciphertext;
   const tag = encryptedData.tag;
@@ -186,15 +227,15 @@ export async function sendToProgramTest(encryptedData) {
   const tag = encryptedData.tag;
   console.log("TEST1");
   const serializedEncryptedData = serializeEncryptedData(encryptedData);
-  console.log("TEST1.5");
+  // console.log("TEST1.5");
   const ciphertextBuffer = serializedEncryptedData.ciphertext;
   const tagBuffer = serializedEncryptedData.tag;
   const ivBuffer = serializedEncryptedData.iv;
   const dataTimestamp = Date.now();
   const ship = anchor.web3.Keypair.fromSeed(new Uint8Array(32).fill(99));
-  console.log("TEST2");
+  // console.log("TEST2");
   const program = new anchor.Program(IDL as anchor.Idl, new anchor.AnchorProvider(new Connection("http://127.0.0.1:8899", { commitment: 'confirmed' }), new NodeWallet(ship)));
-  console.log("TEST3");
+  // console.log("TEST3");
   const [shipAccountAddress, bump1] = PublicKey.findProgramAddressSync(
     [Buffer.from("ship_account"), ship.publicKey.toBuffer()],
     program.programId
@@ -202,16 +243,16 @@ export async function sendToProgramTest(encryptedData) {
 
   // @ts-ignore
   const shipAccount = await program.account.shipAccount.fetch(shipAccountAddress);
-  console.log("TEST4");
+  // console.log("TEST4");
   const [dataAccount, bump2] = PublicKey.findProgramAddressSync(
     [Buffer.from("data_account"), ship.publicKey.toBuffer(), new anchor.BN(0, "le").toArrayLike(Buffer, "le", 8)],
     program.programId
   );
-  console.log("TEST5");
-  console.log("Ciphertext length: ", ciphertextBuffer.length);
-  console.log("Tag length: ", tagBuffer.length);
-  console.log("IV length: ", ivBuffer.length);
-  console.log("Data timestamp size: ", new anchor.BN(dataTimestamp).toArrayLike(Buffer, "le", 8).length);
+  // console.log("TEST5");
+  // console.log("Ciphertext length: ", ciphertextBuffer.length);
+  // console.log("Tag length: ", tagBuffer.length);
+  // console.log("IV length: ", ivBuffer.length);
+  // console.log("Data timestamp size: ", new anchor.BN(dataTimestamp).toArrayLike(Buffer, "le", 8).length);
   const tx = await program.methods
     .addDataFingerprint(ciphertextBuffer, tagBuffer, ivBuffer, new anchor.BN(dataTimestamp))
     .accountsStrict({
