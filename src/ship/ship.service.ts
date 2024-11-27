@@ -8,12 +8,14 @@ import {
   encryptShip,
   sendToProgram,
   numberOfReadings,
+  createShipFromLocationAndId,
+  randomFloatInRange,
 } from './utils/helpers/generateValues';
 import {
   loadEncryptedShipQueueFromFile,
   saveEncryptedShipQueueToFile,
 } from './utils/helpers/fileHelpers';
-import { Ship } from './entities/ship.entity';
+import { Coordinate, Ship } from './entities/ship.entity';
 
 @Injectable()
 export class ShipService {
@@ -26,12 +28,54 @@ export class ShipService {
     return (await this.shipRepository.create(shipDataEncryptedDto)).toObject();
   }
 
+  async createDecryptedShip() {
+    const positions = [
+      { id: "11111111111111111111111111111111111", lat: -45, lng: -50 },
+      { id: "22222222222222222222222222222222222", lat: 5, lng: 150 },
+      { id: "33333333333333333333333333333333333", lat: -45, lng: 100 },
+    ];
+
+    await Promise.all(
+      positions.map(async (position) => {
+        const newShipDataReadings = await createShipFromLocationAndId(
+          position.id,
+          position.lat,
+          position.lng
+        );
+        await this.shipRepository.addDecryptedShip(newShipDataReadings);
+      })
+    );
+  }
+  
+  @Cron(CronExpression.EVERY_SECOND)
+  async updateDecryptedShip() {
+    const ids = ["11111111111111111111111111111111111", "22222222222222222222222222222222222", "33333333333333333333333333333333333"];
+
+    const ships = await Promise.all(
+      ids.map((id) => this.shipRepository.findDecryptedByID(id))
+    );
+
+    const gpsLocations = ships.map((ship) => ({
+      lat: randomFloatInRange(ship.gps.lat - 2, ship.gps.lat + 2),
+      long: randomFloatInRange(ship.gps.long - 2, ship.gps.long + 2),
+    }));
+
+    await Promise.all(
+      ships.map((ship, index) => 
+        this.shipRepository.addDecryptedShip({
+          ...ship,
+          gps: gpsLocations[index]
+        })
+      )
+    );
+  }
+
   @Cron(CronExpression.EVERY_5_SECONDS)
   async fetchSensorData() {
     this.shipEncryptedDataQueue = loadEncryptedShipQueueFromFile();
     const newShipDataReadings = await createShipObject();
 
-    await this.shipRepository.addDecryptedShip(newShipDataReadings);
+    // await this.shipRepository.addDecryptedShip(newShipDataReadings);
 
     this.shipQueue.push({ ...newShipDataReadings });
     if (this.shipQueue.length < numberOfReadings) {
@@ -62,7 +106,7 @@ export class ShipService {
         // this.shipEncryptedDataQueue.push(encryptedData);
       }
 
-      console.log(this.shipEncryptedDataQueue);
+      // console.log(this.shipEncryptedDataQueue);
       saveEncryptedShipQueueToFile(this.shipEncryptedDataQueue);
 
       this.shipQueue = [];

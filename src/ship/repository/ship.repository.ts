@@ -55,6 +55,18 @@ export class ShipRepository {
     );
   }
 
+  async findDecryptedByID(id: string): Promise<Ship> {
+    const ship = await this.shipModel.find({ id }).sort({ time: -1 }).limit(1).exec();
+    return ship[0]?.toObject({
+      transform(doc, ret) {
+        delete ret.__v;
+        delete doc._id;
+        delete ret._id;
+      },
+    }
+    );
+  }
+
   async findAllByID(
     dataCommitmentCipher: string,
   ): Promise<ShipDataEncrypted[]> {
